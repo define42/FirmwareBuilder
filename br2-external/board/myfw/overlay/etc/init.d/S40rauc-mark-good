@@ -1,0 +1,13 @@
+#!/bin/sh
+
+case "$1" in
+  start)
+    if command -v rauc >/dev/null 2>&1; then
+      rauc status mark-good || true
+    fi
+    ;;
+  stop)
+    ;;
+  restart)
+    ;;
+esac

@@ -1,0 +1,9 @@
+[update]
+compatible=myfw-x86_64
+version=@VERSION@
+
+[bundle]
+format=verity
+
+[image.rootfs]
+filename=rootfs.ext4
