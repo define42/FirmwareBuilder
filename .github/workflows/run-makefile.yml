@@ -1,0 +1,42 @@
+name: Run Makefile
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  make:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cpio \
+            file \
+            git \
+            python3 \
+            rsync \
+            unzip \
+            wget \
+            bc \
+            bison \
+            flex \
+            libssl-dev
+
+      - name: Run make
+        run: make
+
+      - name: Run make bundle
+        run: make bundle
+
+      - name: List output images
+        run: ls -la output/images/
