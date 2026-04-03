@@ -33,7 +33,7 @@ jobs:
             libssl-dev
 
       - name: Run make
-        run: make
+        run: make -j8
 
       - name: Run make bundle
         run: make bundle
