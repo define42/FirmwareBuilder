@@ -16,6 +16,7 @@ This is a starter repo for a Buildroot-based x86_64 appliance with:
 - `genimage.cfg`: initial provisioning image layout
 - `make-bundle.sh`: produces a signed RAUC bundle from `rootfs.ext4`
 - placeholder cert files in `certs/`
+- generated development certs under `output/generated-certs/`
 
 ## Expected layout
 
@@ -40,7 +41,8 @@ myfw-buildroot-rauc-example/
 ## Important
 
 - The top-level `Makefile` expects either `curl` or `wget`, plus `tar`
-- The cert files are placeholders; replace them before creating real bundles
+- `make` and `make bundle` auto-generate development certs in `output/generated-certs/`
+- The checked-in cert files are placeholders only; replace the generated development cert flow before shipping real bundles
 - The exact RAUC package symbols can vary by Buildroot release, so if the defconfig does not enable them automatically, run `make menuconfig` and enable `rauc` and `host-rauc`
 - The GRUB slot logic here is a starter template, not a production-grade rollback policy
 - The initial install image is `output/images/myfw.img`

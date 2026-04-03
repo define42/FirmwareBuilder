@@ -30,7 +30,8 @@ jobs:
             bc \
             bison \
             flex \
-            libssl-dev
+            libssl-dev \
+            openssl
 
       - name: Run make
         run: make -j8

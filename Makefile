@@ -48,7 +48,7 @@ build: defconfig
 	$(MAKE) -C $(BR_DIR) $(BR_ARGS)
 
 .PHONY: bundle
-bundle: buildroot
+bundle: build
 	$(BR_EXT)/board/myfw/make-bundle.sh \
 		$(OUT_DIR)/images \
 		$(BR_EXT)/board/myfw

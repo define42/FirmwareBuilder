@@ -3,11 +3,15 @@ set -eu
 
 TARGET_DIR="$1"
 BOARD_DIR="$(dirname "$0")"
+OUTPUT_DIR="${BASE_DIR:?BASE_DIR must be set by Buildroot}"
+CERTS_DIR="${OUTPUT_DIR}/generated-certs"
+
+"${BOARD_DIR}/ensure-dev-certs.sh" "${OUTPUT_DIR}"
 
 chmod +x "${TARGET_DIR}/etc/init.d/S40rauc-mark-good"
 
 install -d "${TARGET_DIR}/etc/rauc"
-install -m 0644 "${BOARD_DIR}/certs/dev-ca.cert.pem" \
+install -m 0644 "${CERTS_DIR}/dev-ca.cert.pem" \
   "${TARGET_DIR}/etc/rauc/ca.cert.pem"
 
 mkdir -p "${TARGET_DIR}/data"
