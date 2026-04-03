@@ -7,31 +7,70 @@ This is a starter repo for a Buildroot-based x86_64 appliance with:
 - writable `/data`
 - RAUC system config
 - signed `.raucb` bundle generation helper
+- a top-level `Makefile` that can download and unpack Buildroot automatically when `./buildroot` is missing
 
 ## What is included
 
-- `Makefile`: thin wrapper around Buildroot
+- `Makefile`: wrapper around Buildroot with bootstrap logic
 - `br2-external/`: external tree with config and board files
 - `genimage.cfg`: initial provisioning image layout
 - `make-bundle.sh`: produces a signed RAUC bundle from `rootfs.ext4`
 - placeholder cert files in `certs/`
 
+## Expected layout
+
+After extracting the zip, the repo should look like this:
+
+```text
+myfw-buildroot-rauc-example/
+├── Makefile
+└── br2-external/
+```
+
+On first `make`, the wrapper Makefile is expected to create or use:
+
+```text
+myfw-buildroot-rauc-example/
+├── buildroot/
+├── dl/
+├── output/
+└── .tmp/
+```
+
 ## Important
 
-- You still need to clone Buildroot into `./buildroot`
-- The cert files are placeholders; replace them before creating bundles
-- The RAUC package symbols can vary by Buildroot release, so enable `rauc` and `host-rauc` in `make menuconfig` if needed
+- The top-level `Makefile` expects either `curl` or `wget`, plus `tar`
+- The cert files are placeholders; replace them before creating real bundles
+- The exact RAUC package symbols can vary by Buildroot release, so if the defconfig does not enable them automatically, run `make menuconfig` and enable `rauc` and `host-rauc`
 - The GRUB slot logic here is a starter template, not a production-grade rollback policy
+- The initial install image is `output/images/myfw.img`
+- Later updates are `.raucb` bundles built from the current `rootfs.ext4`
 
 ## Quick start
 
+From the repo root:
+
 ```bash
-git clone https://github.com/buildroot/buildroot.git
-make build
+make
 make bundle VERSION=1.0.1
 ```
 
-Outputs should land in `output/images/`.
+On the first run, `make` should:
+
+1. download a Buildroot release tarball if `./buildroot` is missing
+2. unpack it into `./buildroot`
+3. load `myfw_x86_64_rauc_defconfig`
+4. build the firmware artifacts into `output/images/`
+
+Typical outputs are:
+
+```text
+output/images/
+├── bzImage
+├── rootfs.ext4
+├── myfw.img
+└── update-1.0.1.raucb
+```
 
 ## Provisioning
 
@@ -50,3 +89,25 @@ Copy a bundle to the device and install it:
 rauc install /data/update-1.0.1.raucb
 reboot
 ```
+
+## Useful targets
+
+```bash
+make           # bootstrap Buildroot if missing, then build
+make menuconfig
+make bundle VERSION=1.0.1
+make show
+make clean
+make distclean
+make realclean
+```
+
+## Troubleshooting
+
+If you see an error like this:
+
+```text
+make[1]: *** /path/to/repo/buildroot: No such file or directory. Stop.
+```
+
+then your current `Makefile` does not yet include the bootstrap logic, or the repo contents are older than this README. In that case, update the top-level `Makefile` so it downloads and extracts Buildroot before calling `make -C ./buildroot`.
