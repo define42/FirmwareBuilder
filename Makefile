@@ -68,3 +68,13 @@ realclean: distclean
 .PHONY: show
 show:
 	@ls -lh $(OUT_DIR)/images || true
+
+.PHONY: qemu
+qemu:
+	qemu-system-x86_64 \
+		-m 1024 \
+		-nographic \
+		-kernel $(OUT_DIR)/images/bzImage \
+		-append "root=/dev/sda2 rw console=tty0 console=ttyS0,115200" \
+		-nic user,model=e1000 \
+		-drive file=$(OUT_DIR)/images/myfw.img,format=raw
