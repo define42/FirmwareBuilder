@@ -1,0 +1,127 @@
+#!/bin/sh
+
+DAEMON="netforge"
+PIDFILE="/var/run/$DAEMON.pid"
+DAEMON_PATH="/usr/bin/$DAEMON"
+DEFAULT_FILE="/etc/default/$DAEMON"
+PERSISTENT_DEFAULT_FILE="/data/etc/default/$DAEMON"
+NS_CONFIG_FILE="/etc/netforge/namespaces.json"
+PERSISTENT_NS_CONFIG_FILE="/data/netforge/namespaces.json"
+RUNTIME_DIR="/var/lib/$DAEMON"
+
+NETFORGE_ARGS=""
+PARENT_NIC=""
+HOST_HTTP_ADDR=""
+NS_CONFIG_JSON=""
+
+# shellcheck source=/dev/null
+if [ -r "$PERSISTENT_DEFAULT_FILE" ]; then
+	. "$PERSISTENT_DEFAULT_FILE"
+elif [ -r "$DEFAULT_FILE" ]; then
+	. "$DEFAULT_FILE"
+fi
+
+HOST_HTTP_ADDR="${HOST_HTTP_ADDR:-127.0.0.1:8090}"
+
+autodetect_parent_nic() {
+	for path in /sys/class/net/*; do
+		[ -e "$path" ] || continue
+		nic="${path##*/}"
+		[ "$nic" = "lo" ] && continue
+		echo "$nic"
+		return 0
+	done
+	return 1
+}
+
+prepare_runtime() {
+	mkdir -p /run/netns /sys/fs/cgroup "$RUNTIME_DIR" /data/etc/default /data/netforge
+	chmod 0700 "$RUNTIME_DIR"
+
+	if ! mountpoint -q /sys; then
+		mount -t sysfs sysfs /sys
+	fi
+
+	if ! mountpoint -q /sys/fs/cgroup; then
+		mount -t cgroup2 cgroup2 /sys/fs/cgroup
+	fi
+
+	if [ -z "$PARENT_NIC" ]; then
+		PARENT_NIC="$(autodetect_parent_nic || true)"
+	fi
+
+	if [ -z "$PARENT_NIC" ]; then
+		echo "No parent NIC configured in $PERSISTENT_DEFAULT_FILE or $DEFAULT_FILE and none could be auto-detected"
+		return 1
+	fi
+
+	if [ -z "$NS_CONFIG_JSON" ] && [ -r "$PERSISTENT_NS_CONFIG_FILE" ]; then
+		NS_CONFIG_JSON="$(cat "$PERSISTENT_NS_CONFIG_FILE")"
+	elif [ -z "$NS_CONFIG_JSON" ] && [ -r "$NS_CONFIG_FILE" ]; then
+		NS_CONFIG_JSON="$(cat "$NS_CONFIG_FILE")"
+	fi
+
+	export PARENT_NIC HOST_HTTP_ADDR
+	if [ -n "$NS_CONFIG_JSON" ]; then
+		export NS_CONFIG_JSON
+	fi
+
+	/sbin/ip link set dev "$PARENT_NIC" up >/dev/null 2>&1 || true
+	return 0
+}
+
+start() {
+	printf 'Starting %s: ' "$DAEMON"
+	if ! prepare_runtime; then
+		echo "FAIL"
+		return 1
+	fi
+
+	# shellcheck disable=SC2086 # we need word splitting for NETFORGE_ARGS
+	start-stop-daemon --start --background --make-pidfile \
+		--pidfile "$PIDFILE" --exec "$DAEMON_PATH" \
+		-- $NETFORGE_ARGS
+	status=$?
+	if [ "$status" -eq 0 ]; then
+		echo "OK"
+	else
+		echo "FAIL"
+	fi
+	return "$status"
+}
+
+stop() {
+	printf 'Stopping %s: ' "$DAEMON"
+	start-stop-daemon --stop --pidfile "$PIDFILE" --exec "$DAEMON_PATH"
+	status=$?
+	if [ "$status" -eq 0 ]; then
+		echo "OK"
+	else
+		echo "FAIL"
+		return "$status"
+	fi
+	while start-stop-daemon --stop --test --quiet --pidfile "$PIDFILE" \
+		--exec "$DAEMON_PATH"; do
+		sleep 0.1
+	done
+	rm -f "$PIDFILE"
+	return "$status"
+}
+
+restart() {
+	stop
+	start
+}
+
+case "$1" in
+	start|stop|restart)
+		"$1"
+		;;
+	reload)
+		restart
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|reload}"
+		exit 1
+		;;
+esac

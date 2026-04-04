@@ -5,6 +5,7 @@ This is a starter repo for a Buildroot-based x86_64 appliance with:
 - GRUB EFI boot
 - A/B rootfs partitions
 - writable `/data`
+- NetForge preinstalled and started at boot
 - RAUC system config
 - signed `.raucb` bundle generation helper
 - a top-level `Makefile` that can download and unpack Buildroot automatically when `./buildroot` is missing
@@ -82,6 +83,25 @@ Flash the initial image once:
 sudo dd if=output/images/myfw.img of=/dev/sdX bs=4M status=progress oflag=sync
 sync
 ```
+
+## NetForge
+
+The image now includes `NetForge v1.0.2` and starts it automatically at boot.
+
+Runtime configuration lives in:
+
+- `/etc/default/netforge`
+- `/data/etc/default/netforge`
+- `/etc/netforge/namespaces.json.example`
+- `/data/netforge/namespaces.json`
+
+`/etc/default/netforge` is the image default. If you want settings to survive
+RAUC rootfs updates, put overrides in `/data/etc/default/netforge` and keep your
+namespace JSON in `/data/netforge/namespaces.json`.
+
+If `PARENT_NIC` is left empty, the boot script auto-detects the first
+non-loopback interface. If no namespace JSON exists, NetForge falls back to its
+built-in demo namespaces.
 
 ## Updating
 

@@ -1,0 +1,19 @@
+# Rootfs default file for NetForge.
+# For settings that should survive RAUC rootfs updates, place overrides in:
+#   /data/etc/default/netforge
+#
+# Parent interface used for VLAN subinterfaces.
+# Leave this empty to let the init script auto-detect the first
+# non-loopback interface that exists at boot.
+PARENT_NIC=""
+
+# Keep the dashboard on loopback unless you intentionally expose it.
+HOST_HTTP_ADDR="127.0.0.1:8090"
+
+# Optional extra arguments passed to /usr/bin/netforge.
+NETFORGE_ARGS=""
+
+# Optional inline namespace JSON override.
+# In practice it is easier to copy /etc/netforge/namespaces.json.example
+# to /data/netforge/namespaces.json and edit that file instead.
+NS_CONFIG_JSON=""

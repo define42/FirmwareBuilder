@@ -1,0 +1,1 @@
+source "$BR2_EXTERNAL_MYFW_PATH/package/netforge/Config.in"

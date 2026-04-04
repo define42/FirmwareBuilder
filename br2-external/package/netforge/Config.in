@@ -1,0 +1,12 @@
+config BR2_PACKAGE_NETFORGE
+	bool "netforge"
+	depends on BR2_x86_64
+	help
+	  Install the prebuilt NetForge linux/amd64 release binary.
+
+	  The package also installs a SysV init script so NetForge starts
+	  automatically at boot and reads its runtime settings from
+	  /etc/default/netforge.
+
+comment "netforge needs an x86_64 target"
+	depends on !BR2_x86_64

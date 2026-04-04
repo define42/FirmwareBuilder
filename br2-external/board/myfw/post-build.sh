@@ -16,6 +16,8 @@ install -m 0644 "${CERTS_DIR}/dev-ca.cert.pem" \
 
 mkdir -p "${TARGET_DIR}/efi"
 mkdir -p "${TARGET_DIR}/data"
+mkdir -p "${TARGET_DIR}/run/netns"
+mkdir -p "${TARGET_DIR}/sys/fs/cgroup"
 mkdir -p "${TARGET_DIR}/var"
 mkdir -p "${TARGET_DIR}/var/lib"
 

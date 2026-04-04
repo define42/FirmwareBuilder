@@ -1,1 +1,1 @@
-# no custom packages in this starter
+include $(sort $(wildcard $(BR2_EXTERNAL_MYFW_PATH)/package/*/*.mk))

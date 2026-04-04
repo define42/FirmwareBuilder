@@ -1,4 +1,11 @@
-/dev/disk/by-partlabel/efi   /efi   vfat   defaults,umask=0077              0 0
-/dev/disk/by-partlabel/data  /data  ext4   defaults                          0 2
-tmpfs                       /run   tmpfs  defaults,nosuid,nodev,mode=0755  0 0
-tmpfs                       /tmp   tmpfs  defaults,nosuid,nodev,mode=1777  0 0
+# <file system>           <mount point>   <type>   <options>                                 <dump> <pass>
+/dev/root                  /               ext4     rw,noauto                                 0      1
+proc                       /proc           proc     defaults                                  0      0
+devpts                     /dev/pts        devpts   defaults,gid=5,mode=620,ptmxmode=0666   0      0
+tmpfs                      /dev/shm        tmpfs    mode=1777                                 0      0
+tmpfs                      /tmp            tmpfs    defaults,nosuid,nodev,mode=1777          0      0
+tmpfs                      /run            tmpfs    defaults,nosuid,nodev,mode=0755          0      0
+sysfs                      /sys            sysfs    defaults                                  0      0
+cgroup2                    /sys/fs/cgroup  cgroup2  defaults                                  0      0
+/dev/disk/by-partlabel/efi /efi            vfat     defaults,umask=0077                      0      0
+/dev/disk/by-partlabel/data /data          ext4     defaults                                  0      2
