@@ -14,6 +14,7 @@ install -d "${TARGET_DIR}/etc/rauc"
 install -m 0644 "${CERTS_DIR}/dev-ca.cert.pem" \
   "${TARGET_DIR}/etc/rauc/ca.cert.pem"
 
+mkdir -p "${TARGET_DIR}/efi"
 mkdir -p "${TARGET_DIR}/data"
 mkdir -p "${TARGET_DIR}/var"
 mkdir -p "${TARGET_DIR}/var/lib"

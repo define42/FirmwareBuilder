@@ -1,6 +1,6 @@
-BR_VERSION := 2026.02
+BR_VERSION ?= 2026.02
 BR_ARCHIVE := buildroot-$(BR_VERSION).tar.gz
-BR_URL     := https://buildroot.org/downloads/$(BR_ARCHIVE)
+BR_URL := https://buildroot.org/downloads/$(BR_ARCHIVE)
 
 ROOT_DIR := $(CURDIR)
 BR_DIR   := $(ROOT_DIR)/buildroot
@@ -8,6 +8,10 @@ BR_EXT   := $(ROOT_DIR)/br2-external
 OUT_DIR  := $(ROOT_DIR)/output
 DL_DIR   := $(ROOT_DIR)/dl
 TMP_DIR  := $(ROOT_DIR)/.tmp
+IMAGES_DIR := $(OUT_DIR)/images
+IMG_ARTIFACT := $(IMAGES_DIR)/myfw.img
+VERSION ?= 1.0.1
+BUNDLE_ARTIFACT := $(IMAGES_DIR)/update-$(VERSION).raucb
 
 BR_ARGS = \
 	BR2_EXTERNAL=$(BR_EXT) \
@@ -15,7 +19,7 @@ BR_ARGS = \
 	O=$(OUT_DIR)
 
 .PHONY: all
-all: build
+all: firmware bundle
 
 .PHONY: buildroot
 buildroot:
@@ -26,7 +30,14 @@ buildroot:
 		echo "Buildroot missing, downloading $(BR_ARCHIVE)"; \
 		mkdir -p "$(TMP_DIR)" "$(DL_DIR)"; \
 		if [ ! -f "$(DL_DIR)/$(BR_ARCHIVE)" ]; then \
-			curl -L "$(BR_URL)" -o "$(DL_DIR)/$(BR_ARCHIVE)"; \
+			if command -v curl >/dev/null 2>&1; then \
+				curl -L "$(BR_URL)" -o "$(DL_DIR)/$(BR_ARCHIVE)"; \
+			elif command -v wget >/dev/null 2>&1; then \
+				wget -O "$(DL_DIR)/$(BR_ARCHIVE)" "$(BR_URL)"; \
+			else \
+				echo "error: need curl or wget to download Buildroot" >&2; \
+				exit 1; \
+			fi; \
 		fi; \
 		rm -rf "$(TMP_DIR)/buildroot-$(BR_VERSION)"; \
 		tar -xzf "$(DL_DIR)/$(BR_ARCHIVE)" -C "$(TMP_DIR)"; \
@@ -47,15 +58,31 @@ menuconfig: buildroot
 build: defconfig
 	$(MAKE) -C $(BR_DIR) $(BR_ARGS)
 
+.PHONY: firmware
+firmware: $(IMG_ARTIFACT)
+
+$(IMG_ARTIFACT): defconfig
+	$(MAKE) -C $(BR_DIR) $(BR_ARGS)
+
 .PHONY: bundle
-bundle: build
+bundle: $(BUNDLE_ARTIFACT)
+
+$(BUNDLE_ARTIFACT): firmware
+	VERSION="$(VERSION)" \
 	$(BR_EXT)/board/myfw/make-bundle.sh \
-		$(OUT_DIR)/images \
+		$(IMAGES_DIR) \
 		$(BR_EXT)/board/myfw
 
+.PHONY: artifacts
+artifacts: firmware bundle
+
 .PHONY: clean
-clean: buildroot
-	$(MAKE) -C $(BR_DIR) $(BR_ARGS) clean
+clean:
+	@if [ -d "$(BR_DIR)" ]; then \
+		$(MAKE) -C $(BR_DIR) $(BR_ARGS) clean; \
+	else \
+		rm -rf "$(OUT_DIR)"; \
+	fi
 
 .PHONY: distclean
 distclean:
@@ -67,7 +94,7 @@ realclean: distclean
 
 .PHONY: show
 show:
-	@ls -lh $(OUT_DIR)/images || true
+	@ls -lh $(IMAGES_DIR) || true
 
 .PHONY: qemu
 qemu:
@@ -75,6 +102,6 @@ qemu:
 		-m 1024 \
 		-nographic \
 		-kernel $(OUT_DIR)/images/bzImage \
-		-append "root=/dev/sda2 rw console=tty0 console=ttyS0,115200" \
+		-append "root=PARTLABEL=rootfs.A rootwait rw console=tty0 console=ttyS0,115200 rauc.slot=A" \
 		-nic user,model=e1000 \
 		-drive file=$(OUT_DIR)/images/myfw.img,format=raw

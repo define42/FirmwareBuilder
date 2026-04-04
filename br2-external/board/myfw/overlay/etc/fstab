@@ -1,3 +1,4 @@
-/dev/sda4  /data  ext4   defaults                         0 2
-tmpfs      /run   tmpfs  defaults,nosuid,nodev,mode=0755 0 0
-tmpfs      /tmp   tmpfs  defaults,nosuid,nodev,mode=1777 0 0
+/dev/disk/by-partlabel/efi   /efi   vfat   defaults,umask=0077              0 0
+/dev/disk/by-partlabel/data  /data  ext4   defaults                          0 2
+tmpfs                       /run   tmpfs  defaults,nosuid,nodev,mode=0755  0 0
+tmpfs                       /tmp   tmpfs  defaults,nosuid,nodev,mode=1777  0 0

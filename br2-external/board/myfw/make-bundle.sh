@@ -7,6 +7,7 @@ VERSION="${VERSION:-1.0.1}"
 OUTPUT_DIR="$(dirname "${IMAGES_DIR}")"
 RAUC_BIN="${RAUC_BIN:-${OUTPUT_DIR}/host/bin/rauc}"
 CERTS_DIR="${OUTPUT_DIR}/generated-certs"
+BUNDLE_PATH="${IMAGES_DIR}/update-${VERSION}.raucb"
 
 WORKDIR="$(mktemp -d)"
 trap 'rm -rf "$WORKDIR"' EXIT
@@ -24,8 +25,10 @@ sed "s/@VERSION@/${VERSION}/" \
   exit 1
 }
 
+rm -f "${BUNDLE_PATH}"
+
 "${RAUC_BIN}" bundle \
   --cert="${CERTS_DIR}/dev.cert.pem" \
   --key="${CERTS_DIR}/dev.key.pem" \
   "${WORKDIR}" \
-  "${IMAGES_DIR}/update-${VERSION}.raucb"
+  "${BUNDLE_PATH}"
