@@ -1,0 +1,10 @@
+# Rootfs default file for management network setup.
+# For settings that should survive RAUC rootfs updates, place overrides in:
+#   /data/etc/default/mgmt-network
+#
+# Leave this empty to auto-detect the first non-loopback NIC that is not
+# reserved for NetForge.
+MGMT_NIC=""
+
+# When enabled, request an IPv4 lease for MGMT_NIC during boot.
+MGMT_USE_DHCP="yes"

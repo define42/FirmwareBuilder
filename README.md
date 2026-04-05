@@ -92,6 +92,8 @@ Runtime configuration lives in:
 
 - `/etc/default/netforge`
 - `/data/etc/default/netforge`
+- `/etc/default/mgmt-network`
+- `/data/etc/default/mgmt-network`
 - `/etc/netforge/namespaces.json.example`
 - `/data/netforge/namespaces.json`
 
@@ -99,9 +101,15 @@ Runtime configuration lives in:
 RAUC rootfs updates, put overrides in `/data/etc/default/netforge` and keep your
 namespace JSON in `/data/netforge/namespaces.json`.
 
-If `PARENT_NIC` is left empty, the boot script auto-detects the first
-non-loopback interface. If no namespace JSON exists, NetForge falls back to its
+The image assumes a two-port appliance layout. By default, the first NIC is
+left for host management traffic and NetForge uses `PARENT_NIC=enp0s4`. Override
+that in `/data/etc/default/netforge` if your hardware exposes a different
+predictable NIC name. If no namespace JSON exists, NetForge falls back to its
 built-in demo namespaces.
+
+The management NIC is brought up earlier in boot with DHCP. By default, it uses
+the first NIC that is not reserved for NetForge. Override that selection in
+`/data/etc/default/mgmt-network`.
 
 ## Updating
 

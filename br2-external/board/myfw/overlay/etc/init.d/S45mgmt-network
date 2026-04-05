@@ -1,0 +1,122 @@
+#!/bin/sh
+
+DAEMON="mgmt-network"
+DEFAULT_FILE="/etc/default/$DAEMON"
+PERSISTENT_DEFAULT_FILE="/data/etc/default/$DAEMON"
+NETFORGE_DEFAULT_FILE="/etc/default/netforge"
+PERSISTENT_NETFORGE_DEFAULT_FILE="/data/etc/default/netforge"
+UDHCPC_SCRIPT="/usr/share/udhcpc/default.script"
+
+MGMT_NIC=""
+MGMT_USE_DHCP="yes"
+PARENT_NIC=""
+PIDFILE=""
+
+load_config() {
+	# shellcheck source=/dev/null
+	if [ -r "$PERSISTENT_NETFORGE_DEFAULT_FILE" ]; then
+		. "$PERSISTENT_NETFORGE_DEFAULT_FILE"
+	elif [ -r "$NETFORGE_DEFAULT_FILE" ]; then
+		. "$NETFORGE_DEFAULT_FILE"
+	fi
+
+	# shellcheck source=/dev/null
+	if [ -r "$PERSISTENT_DEFAULT_FILE" ]; then
+		. "$PERSISTENT_DEFAULT_FILE"
+	elif [ -r "$DEFAULT_FILE" ]; then
+		. "$DEFAULT_FILE"
+	fi
+}
+
+autodetect_mgmt_nic() {
+	for path in /sys/class/net/*; do
+		[ -e "$path" ] || continue
+		nic="${path##*/}"
+		[ "$nic" = "lo" ] && continue
+		[ -n "$PARENT_NIC" ] && [ "$nic" = "$PARENT_NIC" ] && continue
+		echo "$nic"
+		return 0
+	done
+	return 1
+}
+
+prepare() {
+	load_config
+
+	if [ -z "$MGMT_NIC" ]; then
+		MGMT_NIC="$(autodetect_mgmt_nic || true)"
+	fi
+
+	if [ -z "$MGMT_NIC" ]; then
+		echo "No management NIC configured and none could be auto-detected"
+		return 1
+	fi
+
+	PIDFILE="/var/run/udhcpc.$MGMT_NIC.pid"
+	return 0
+}
+
+has_ipv4_addr() {
+	ip addr show dev "$MGMT_NIC" 2>/dev/null | grep -q "inet "
+}
+
+start() {
+	printf 'Starting %s: ' "$DAEMON"
+	if ! prepare; then
+		echo "FAIL"
+		return 1
+	fi
+
+	if [ "$MGMT_USE_DHCP" != "yes" ]; then
+		echo "SKIP"
+		return 0
+	fi
+
+	/sbin/ip link set dev "$MGMT_NIC" up >/dev/null 2>&1 || true
+
+	if has_ipv4_addr; then
+		echo "OK"
+		return 0
+	fi
+
+	if /sbin/udhcpc -i "$MGMT_NIC" -n -q -p "$PIDFILE" -s "$UDHCPC_SCRIPT" >/dev/null 2>&1; then
+		echo "OK"
+	else
+		echo "FAIL"
+		return 1
+	fi
+}
+
+stop() {
+	printf 'Stopping %s: ' "$DAEMON"
+	if ! prepare; then
+		echo "FAIL"
+		return 1
+	fi
+
+	if [ -n "$PIDFILE" ] && [ -r "$PIDFILE" ]; then
+		kill "$(cat "$PIDFILE")" >/dev/null 2>&1 || true
+		rm -f "$PIDFILE"
+	fi
+
+	echo "OK"
+	return 0
+}
+
+restart() {
+	stop
+	start
+}
+
+case "$1" in
+	start|stop|restart)
+		"$1"
+		;;
+	reload)
+		restart
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|reload}"
+		exit 1
+		;;
+esac

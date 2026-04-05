@@ -103,5 +103,6 @@ qemu:
 		-nographic \
 		-kernel $(OUT_DIR)/images/bzImage \
 		-append "root=PARTLABEL=rootfs.A rootwait rw console=tty0 console=ttyS0,115200 rauc.slot=A" \
-		-nic user,model=e1000 \
+		-nic user,model=e1000,mac=52:54:00:12:34:56,hostfwd=tcp::2222-:22,hostfwd=tcp::18090-:8090 \
+		-nic user,model=e1000,mac=52:54:00:12:34:57 \
 		-drive file=$(OUT_DIR)/images/myfw.img,format=raw

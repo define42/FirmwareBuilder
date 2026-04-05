@@ -3,12 +3,13 @@
 #   /data/etc/default/netforge
 #
 # Parent interface used for VLAN subinterfaces.
-# Leave this empty to let the init script auto-detect the first
-# non-loopback interface that exists at boot.
-PARENT_NIC=""
+# The image assumes a two-port appliance layout and reserves the second
+# interface for NetForge. Override this in /data/etc/default/netforge if
+# your hardware exposes a different predictable NIC name.
+PARENT_NIC="enp0s4"
 
 # Keep the dashboard on loopback unless you intentionally expose it.
-HOST_HTTP_ADDR="127.0.0.1:8090"
+HOST_HTTP_ADDR="0.0.0.0:8090"
 
 # Optional extra arguments passed to /usr/bin/netforge.
 NETFORGE_ARGS=""
