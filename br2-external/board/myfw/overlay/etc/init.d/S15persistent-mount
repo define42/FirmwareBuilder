@@ -1,0 +1,45 @@
+#!/bin/sh
+
+mount_if_present() {
+	dev="$1"
+	mnt="$2"
+
+	mkdir -p "$mnt"
+
+	if mountpoint -q "$mnt"; then
+		return 0
+	fi
+
+	if [ ! -b "$dev" ]; then
+		return 1
+	fi
+
+	mount "$mnt" >/dev/null 2>&1 || mount "$dev" "$mnt" >/dev/null 2>&1
+}
+
+case "$1" in
+	start)
+		printf "Mounting persistent volumes: "
+		udevadm settle --timeout=5 >/dev/null 2>&1 || true
+		status=0
+
+		mount_if_present /dev/disk/by-partlabel/efi /efi || status=1
+		mount_if_present /dev/disk/by-partlabel/data /data || status=1
+
+		if mountpoint -q /data; then
+			mkdir -p /data/rauc
+			[ -f /data/rauc/central.raucs ] || : > /data/rauc/central.raucs
+		fi
+
+		[ "$status" -eq 0 ] && echo "OK" || echo "FAIL"
+		;;
+	stop)
+		;;
+	restart|reload)
+		"$0" start
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|reload}"
+		exit 1
+		;;
+esac

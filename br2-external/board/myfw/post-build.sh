@@ -9,6 +9,12 @@ CERTS_DIR="${OUTPUT_DIR}/generated-certs"
 "${BOARD_DIR}/ensure-dev-certs.sh" "${OUTPUT_DIR}"
 
 chmod +x "${TARGET_DIR}/etc/init.d/S40rauc-mark-good"
+if [ -f "${TARGET_DIR}/etc/init.d/S15persistent-mount" ]; then
+  chmod +x "${TARGET_DIR}/etc/init.d/S15persistent-mount"
+fi
+if [ -f "${TARGET_DIR}/etc/init.d/S45mgmt-network" ]; then
+  chmod +x "${TARGET_DIR}/etc/init.d/S45mgmt-network"
+fi
 
 install -d "${TARGET_DIR}/etc/rauc"
 install -m 0644 "${CERTS_DIR}/dev-ca.cert.pem" \
@@ -16,6 +22,7 @@ install -m 0644 "${CERTS_DIR}/dev-ca.cert.pem" \
 
 mkdir -p "${TARGET_DIR}/efi"
 mkdir -p "${TARGET_DIR}/data"
+mkdir -p "${TARGET_DIR}/data/rauc"
 mkdir -p "${TARGET_DIR}/run/netns"
 mkdir -p "${TARGET_DIR}/sys/fs/cgroup"
 mkdir -p "${TARGET_DIR}/var"

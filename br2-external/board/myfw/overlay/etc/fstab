@@ -7,5 +7,5 @@ tmpfs                      /tmp            tmpfs    defaults,nosuid,nodev,mode=1
 tmpfs                      /run            tmpfs    defaults,nosuid,nodev,mode=0755          0      0
 sysfs                      /sys            sysfs    defaults                                  0      0
 cgroup2                    /sys/fs/cgroup  cgroup2  defaults                                  0      0
-/dev/disk/by-partlabel/efi /efi            vfat     defaults,umask=0077                      0      0
-/dev/disk/by-partlabel/data /data          ext4     defaults                                  0      2
+# /efi and /data are mounted later in boot by /etc/init.d/S15persistent-mount,
+# after udev has created the /dev/disk/by-partlabel symlinks.
