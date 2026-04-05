@@ -15,6 +15,14 @@ fi
 if [ -f "${TARGET_DIR}/etc/init.d/S45mgmt-network" ]; then
   chmod +x "${TARGET_DIR}/etc/init.d/S45mgmt-network"
 fi
+if [ -f "${TARGET_DIR}/etc/init.d/S01syslogd" ]; then
+  mv "${TARGET_DIR}/etc/init.d/S01syslogd" \
+    "${TARGET_DIR}/etc/init.d/S16syslogd"
+fi
+if [ -f "${TARGET_DIR}/etc/init.d/S02klogd" ]; then
+  mv "${TARGET_DIR}/etc/init.d/S02klogd" \
+    "${TARGET_DIR}/etc/init.d/S17klogd"
+fi
 
 install -d "${TARGET_DIR}/etc/rauc"
 install -m 0644 "${CERTS_DIR}/dev-ca.cert.pem" \
@@ -22,6 +30,7 @@ install -m 0644 "${CERTS_DIR}/dev-ca.cert.pem" \
 
 mkdir -p "${TARGET_DIR}/efi"
 mkdir -p "${TARGET_DIR}/data"
+mkdir -p "${TARGET_DIR}/data/log"
 mkdir -p "${TARGET_DIR}/data/rauc"
 mkdir -p "${TARGET_DIR}/run/netns"
 mkdir -p "${TARGET_DIR}/sys/fs/cgroup"
